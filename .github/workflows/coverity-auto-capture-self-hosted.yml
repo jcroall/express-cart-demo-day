@@ -63,22 +63,28 @@ jobs:
         if: ${{ github.event_name == 'pull_request' }}
         id: changeset
         uses: jitterbit/get-changed-files@v1
-        with:
-          format: json
+        #with:
+        #  format: json
 
       - name: Coverity Scan (Incremental analysis)
         if: ${{github.event_name == 'pull_request'}}
         run: |
-          env
           export COVERITY_STREAM_NAME=${GITHUB_REPOSITORY##*/}-$BASE_BRANCH
-          echo ${{ steps.changeset.outputs.added_modified }}
-          echo ${{ steps.changeset.outputs.added_modified }} | jq -r '.[]' > coverity-files-to-scan.txt
+
+          for changed_file in ${{ steps.changeset.outputs.added_modified }}; do
+            echo ${changed_file} >> coverity-files-to-scan.txt
+            echo "Scan changed file ${changed_file}."
+          done
+
+          #echo ${{ steps.changeset.outputs.added_modified }}
+          #echo ${{ steps.changeset.outputs.added_modified }} | jq -r '.[]' > coverity-files-to-scan.txt
+          #
           #readarray -t changed_files <<<"$(jq -r '.[]' <<<'${{ steps.changeset.outputs.added_modified }}')"
           #for changed_file in ${changed_files[@]}; do
           #  echo ${changed_file} >> coverity-files-to-scan.txt
           #  echo "Scan changed file ${changed_file}."
           #done
-          echo 
+
           cov-capture --dir idir --source-list coverity-files-to-scan.txt
           cov-run-desktop --dir idir --strip-path `pwd` --url $COVERITY_URL --stream $COVERITY_STREAM_NAME --present-in-reference false \
             --ignore-uncapturable-inputs true --exit1-if-defects true coverity-files-to-scan.txt \
