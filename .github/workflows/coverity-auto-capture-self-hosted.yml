@@ -90,12 +90,17 @@ jobs:
             --checkoutPath $GITHUB_REPOSITORY `pwd` $GITHUB_SHA \
             --outputFile synopsys-coverity-github-sarif.json
 
-      #- name: Comment on pull request (Incremental)
-      #  run: python3 ./synopsys-github-tools/synopsys-github-tools/github-coverity-comment-on-pull-request.py --coverity-json coverity-incremental-results.json --url $COVERITY_URL --stream $COVERITY_STREAM_NAME --debug 9
-      #  if: ${{github.event_name == 'pull_request'}}
-      #  env:
-      #    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #  continue-on-error: true
+      - name: Comment on pull request (Incremental)
+        run: |
+          python3 ./synopsys-github-tools/github-coverity-comment-on-pull-request.py \
+            --coverity-json coverity-incremental-results.json \
+            --url $COVERITY_URL \
+            --stream $COVERITY_STREAM_NAME \
+            --debug 9 \
+            --sigma-json ./sigma-results.json
+        if: ${{github.event_name == 'pull_request'}}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload SARIF file
         uses: github/codeql-action/upload-sarif@v1
