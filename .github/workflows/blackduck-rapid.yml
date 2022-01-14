@@ -4,7 +4,7 @@ name: Black Duck Intelligent Scan (Scheduled)
 on:
   pull_request:
     branches:
-      - main
+      - master
   push:
 
 jobs:
