@@ -63,34 +63,32 @@ jobs:
         if: ${{ github.event_name == 'pull_request' }}
         id: changeset
         uses: jitterbit/get-changed-files@v1
-        #with:
-        #  format: json
 
       - name: Coverity Scan (Incremental analysis)
         if: ${{github.event_name == 'pull_request'}}
         run: |
           export COVERITY_STREAM_NAME=${GITHUB_REPOSITORY##*/}-$BASE_BRANCH
-
           for changed_file in ${{ steps.changeset.outputs.added_modified }}; do
             echo ${changed_file} >> coverity-files-to-scan.txt
             echo "Scan changed file ${changed_file}."
           done
-
-          #echo ${{ steps.changeset.outputs.added_modified }}
-          #echo ${{ steps.changeset.outputs.added_modified }} | jq -r '.[]' > coverity-files-to-scan.txt
-          #
-          #readarray -t changed_files <<<"$(jq -r '.[]' <<<'${{ steps.changeset.outputs.added_modified }}')"
-          #for changed_file in ${changed_files[@]}; do
-          #  echo ${changed_file} >> coverity-files-to-scan.txt
-          #  echo "Scan changed file ${changed_file}."
-          #done
-
           cov-capture --dir idir --source-list coverity-files-to-scan.txt
           cov-run-desktop --dir idir --strip-path `pwd` --url $COVERITY_URL --stream $COVERITY_STREAM_NAME --present-in-reference false \
-            --ignore-uncapturable-inputs true --exit1-if-defects true coverity-files-to-scan.txt \
-            --json-output-v7 coverity-incremental-results.json
+            --ignore-uncapturable-inputs true --exit1-if-defects true \
+            --json-output-v7 coverity-incremental-results.json \
+            ${{ steps.changeset.outputs.added_modified }}
+          ~/Applications/cov-analysis-macosx-2021.12/sigma/bin/sigma analyze
         env:
           BASE_BRANCH: ${{ github.base_ref }}
+
+      - name: Coverity SARIF Generation (Incremental analysis)
+        if: ${{github.event_name == 'pull_request'}}
+        run: |
+          node ~/Applications/cov-analysis-macosx-2021.12/SARIF/cov-format-sarif-for-github.js \
+            --inputFile coverity-incremental-results.json \
+            --repoName $GITHUB_REPOSITORY \
+            --checkoutPath $GITHUB_REPOSITORY `pwd` $GITHUB_SHA \
+            --outputFile synopsys-coverity-github-sarif.json
 
       #- name: Comment on pull request (Incremental)
       #  run: python3 ./synopsys-github-tools/synopsys-github-tools/github-coverity-comment-on-pull-request.py --coverity-json coverity-incremental-results.json --url $COVERITY_URL --stream $COVERITY_STREAM_NAME --debug 9
