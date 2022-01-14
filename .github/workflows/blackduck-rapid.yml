@@ -1,4 +1,4 @@
-name: Black Duck Intelligent Scan (Scheduled)
+name: Black Duck Rapid Scan
 
 # Run Rapid Scan on all pull requests and pushes to a main branch
 on:

@@ -1,4 +1,4 @@
-name: Black Duck Intelligent Scan (Scheduled)
+name: Black Duck Intelligent Scan
 
 on:
   pull_request:
