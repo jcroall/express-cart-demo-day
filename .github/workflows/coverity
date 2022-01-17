@@ -1,6 +1,6 @@
 name: Coverity
 
-# Run Rapid Scan on all pull requests and pushes to a main branch
+# Run Coverity on all pull requests and pushes to a main branch
 on:
   pull_request:
     branches:
