@@ -1,0 +1,33 @@
+name: Coverity
+
+# Run Rapid Scan on all pull requests and pushes to a main branch
+on:
+  pull_request:
+    branches:
+      - master
+  push:
+
+jobs:
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+
+      # Run Coverity CLI
+      - name: Run Coverity CLI
+        run: |
+          wget -qO- $COVERITY_CLI_DOWNLOAD | tar xvz - -C ./coverity-cli
+          # Optionally create Coverity CLI configuration for this project if none exists
+          ./coverity-cli/coverity scan
+          
+      - name: Coverity GitHub Integration
+        uses: synopsys-sig/coverity-action@1.0.0
+        with:
+            github-token: ${{ secrets.GITHUB_TOKEN }}
+            connect-url: $COVERITY_URL
+            connect-username: $COVERITY_USERNAME
+            connect-passphrase: $COVERITY_PASSPHRASE
